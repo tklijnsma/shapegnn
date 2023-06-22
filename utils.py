@@ -1,10 +1,23 @@
-import os, argparse, time, sys, re, logging
-import numpy as np
+import os
+import argparse
+import time
+import sys
+import logging
 import matplotlib.pyplot as plt
 from contextlib import contextmanager
 
 
-def setup_logger(name="demognn"):
+def setup_logger(name: str = "demognn") -> logging.Logger:
+    """Sets up a Logger instance.
+
+    If a logger with `name` already exists, returns the existing logger.
+
+    Args:
+        name (str, optional): Name of the logger. Defaults to "demognn".
+
+    Returns:
+        logging.Logger: Logger object.
+    """
     if name in logging.Logger.manager.loggerDict:
         logger = logging.getLogger(name)
         logger.info("Logger %s is already defined", name)
@@ -27,14 +40,30 @@ def setup_logger(name="demognn"):
 logger = setup_logger()
 
 
-def debug(flag=True):
+def debug(flag: bool = True) -> None:
+    """Convenience switch to set the logging level to DEBUG.
+
+    Args:
+        flag (bool, optional): If true, set the logging level to DEBUG. Otherwise, set
+            it to INFO. Defaults to True.
+    """
     if flag:
         logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
 
 
-def set_matplotlib_fontsizes(small=18, medium=22, large=26):
+def set_matplotlib_fontsizes(
+    small: int = 18, medium: int = 22, large: int = 26
+) -> None:
+    """Sets matplotlib font sizes to sensible defaults.
+
+    Args:
+        small (int, optional): Font size for text, axis titles, and ticks. Defaults to
+            18.
+        medium (int, optional): Font size for axis labels. Defaults to 22.
+        large (int, optional): Font size for figure title. Defaults to 26.
+    """
     import matplotlib.pyplot as plt
 
     plt.rc("font", size=small)  # controls default text sizes
@@ -49,7 +78,17 @@ def set_matplotlib_fontsizes(small=18, medium=22, large=26):
 set_matplotlib_fontsizes()
 
 
-def pull_arg(*args, **kwargs):
+def pull_arg(*args, **kwargs) -> argparse.Namespace:
+    """Reads a specific argument out of sys.argv, and then deletes that argument from
+    sys.argv.
+
+    This useful to build very adaptive command line options to scripts. It does
+    sacrifice auto documentation of the command line options though.
+
+    Returns:
+        argparse.Namespace: Namespace object for only the specific argument.
+    """
+
     """
     Reads a specific argument out of sys.argv, and then
     deletes that argument from sys.argv.
@@ -64,7 +103,7 @@ def pull_arg(*args, **kwargs):
 @contextmanager
 def timeit(msg):
     """
-    Prints duraction of a block of code in the terminal.
+    Prints duration of a block of code in the terminal.
     """
     try:
         logger.info(msg)
@@ -80,7 +119,23 @@ class Scripter:
     """
     Command line utility.
 
-    Add `@scripter` above a function to turn it into a command line argument.
+    When an instance of this class is used as a contextwrapper on a function, that
+    function will be considered a 'command'.
+
+    When Scripter.run() is called, the script name is pulled from the command line, and
+    the corresponding function is executed.
+
+    Example:
+
+        In file test.py:
+        >>> scripter = Scripter()
+        >>> @scripter
+        >>> def my_func():
+        >>>     print('Hello world!')
+        >>> scripter.run()
+
+        On the command line, the following would print 'Hello world!':
+        $ python test.py my_func
     """
 
     def __init__(self):
@@ -115,7 +170,7 @@ def quick_ax(figsize=(10, 10), outfile="tmp.png"):
         plt.savefig(outfile, bbox_inches="tight")
         try:
             os.system(f"imgcat {outfile}")
-        except:
+        except Exception:
             pass
 
 
@@ -134,5 +189,5 @@ def quick_fig(figsize=(10, 10), outfile="tmp.png"):
         plt.savefig(outfile, bbox_inches="tight")
         try:
             os.system(f"imgcat {outfile}")
-        except:
+        except Exception:
             pass
